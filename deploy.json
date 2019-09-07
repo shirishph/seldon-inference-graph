@@ -1,0 +1,72 @@
+{
+    "apiVersion": "machinelearning.seldon.io/v1alpha2",
+    "kind": "SeldonDeployment",
+    "metadata": {
+        "labels": {
+            "app": "seldon"
+        },
+        "name": "seldon-pipeline"
+    },
+    "spec": {
+        "annotations": {
+            "project_name": "seldon-pipeline",
+            "deployment_version": "0.1.0",
+            "seldon.io/rest-read-timeout": "100000",
+            "seldon.io/rest-connection-timeout": "100000",
+            "seldon.io/grpc-read-timeout": "100000"
+        },
+        "name": "seldon-pipeline",
+        "oauth_key": "oauth-key",
+        "oauth_secret": "oauth-secret",
+        "predictors": [{
+            "componentSpecs": [{
+                "spec": {
+                    "containers": [{
+                            "name": "sentiment-analysis",
+                            "image": "shirishph/sentiment-analysis:0.1.0",
+                            "imagePullPolicy": "Always"
+                        },
+                        {
+                            "name": "text-tagging",
+                            "image": "shirishph/text-tagging:0.1.0",
+                            "imagePullPolicy": "Always"
+                        },
+                        {
+                            "name": "summarize-text",
+                            "image": "shirishph/summarize-text:0.1.0",
+                            "imagePullPolicy": "Always"
+                        }
+                    ],
+                    "terminationGracePeriodSeconds": 20
+                }
+            }],
+            "graph": {
+                "children": [{
+                    "name": "text-tagging",
+                    "endpoint": {
+                        "type": "REST"
+                    },
+                    "type": "MODEL",
+                    "children": [{
+                        "name": "summarize-text",
+                        "endpoint": {
+                            "type": "REST"
+                        },
+                        "type": "MODEL",
+                        "children": []
+                    }]
+                }],
+                "name": "sentiment-analysis",
+                "endpoint": {
+                    "type": "REST"
+                },
+                "type": "MODEL"
+            },
+            "name": "example",
+            "replicas": 1,
+            "annotations": {
+                "predictor_version": "v1"
+            }
+        }]
+    }
+}
